@@ -32,11 +32,13 @@ class DateParser:
     def parse_period(cls, text, base_date=None):
 
         base_date = base_date or datetime.now()
-        related_period = cls.get_parsed_raw_data(text)
+        related_period, unused = cls.get_parsed_raw_data(text)
+        if not related_period['direction'] or not related_period['step']:
+            return None, None
+
         direction, quantity, step = cls.normalize_parsed_data(related_period)
 
-        base_date = base_date if base_date else datetime.now()
-        base_date = cls.get_base_date(base_date if base_date else datetime.now(), step)
+        base_date = cls.get_base_date(base_date, step)
 
         if direction == 'future':
             dt_from = cls.increase_date(base_date, step)
@@ -76,7 +78,7 @@ class DateParser:
         direction, text = cls.get_parsed_direction(text)
         quantity, text = cls.get_parsed_quantity(text)
         step, text = cls.get_parsed_step(text)
-        return dict(direction=direction, quantity=quantity, step=step, unused=text)
+        return dict(direction=direction, quantity=quantity, step=step), text
 
     @classmethod
     def normalize_parsed_data(cls, data):

@@ -31,6 +31,13 @@ def test_related_period():
     assert data['direction'] == 'past'
 
 
+def test_unknown():
+    assert (None, None) == DateParser().parse_period('unknown words')
+    assert (None, None) == DateParser().parse_period('next song')
+    assert (None, None) == DateParser().parse_period('7 cars')
+    assert (None, None) == DateParser().parse_period('every week')
+
+
 def test_last_week():
     base_date = datetime(2018, 10, 17, 9, 30, 00)
     dt_from, dt_to = DateParser().parse_period('last week', base_date)
@@ -45,17 +52,18 @@ def test_last_two_week():
     assert dt_to == datetime(2018, 10, 15, 0, 0, 0)
 
 
-@pytest.mark.parametrize('text, parsed', [
-    ('last 2 weeks', ('last', '2', 'week', '')),
-    ('next month', ('next', '', 'month', '')),
-    ('previous 2 quarters', ('previous', '2', 'quarter', '')),
-    ('last 5 long years', ('last', '5', 'year', 'long')),
-    ('past years', ('past', '', 'year', '')),
-    ('', ('', '', '', '')),
+@pytest.mark.parametrize('text, parsed, unused', [
+    ('last 2 weeks', ('last', '2', 'week'), ''),
+    ('next month', ('next', '', 'month'), ''),
+    ('previous 2 quarters', ('previous', '2', 'quarter'), ''),
+    ('last 5 long years', ('last', '5', 'year'), 'long'),
+    ('past years', ('past', '', 'year'), ''),
+    ('', ('', '', ''), ''),
 ])
-def test_get_parsed_data(text, parsed):
-    data = DateParser().get_parsed_raw_data(text)
-    assert data == dict(zip(['direction', 'quantity', 'step', 'unused'], parsed))
+def test_get_parsed_data(text, parsed, unused):
+    data, parsed_unused = DateParser().get_parsed_raw_data(text)
+    assert data == dict(zip(['direction', 'quantity', 'step'], parsed))
+    assert parsed_unused == unused
 
 
 @pytest.mark.parametrize('text, direction, subtext', [
