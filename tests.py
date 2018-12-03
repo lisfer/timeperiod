@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from timepeiod import DateParser, quarter_start
+from timeperiod import DateParser, quarter_start
 
 
 @pytest.mark.parametrize('text, dt_from, dt_to', [
