@@ -2,6 +2,12 @@ import re
 from datetime import datetime, timedelta
 
 
+PREDEFINED_PERIODS = {
+    'yesterday': dict(direction='past', step='day', quantity=1),
+    'today': dict(direction='current', step='day', quantity=0),
+    'tomorrow': dict(direction='next', step='day', quantity=1)
+}
+
 TIME_DIRECTIONS = {
     'current': 'current',
     'this': 'current',
@@ -32,7 +38,11 @@ class DateParser:
     def parse_period(cls, text, base_date=None):
 
         base_date = base_date or datetime.now()
-        related_period, unused = cls.get_parsed_raw_data(text)
+
+        related_period = PREDEFINED_PERIODS.get(text)
+        if not related_period:
+            related_period, unused = cls.get_parsed_raw_data(text)
+
         if not related_period['direction'] or not related_period['step']:
             return None, None
 
@@ -109,6 +119,7 @@ class DateParser:
 
     @classmethod
     def increase_date(cls, basedate, step, quantity=1):
+        result = None
         if step == 'day':
             result = basedate + timedelta(days=quantity)
         elif step == 'week':

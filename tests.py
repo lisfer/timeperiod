@@ -17,18 +17,16 @@ import pytest
 from main import DateParser, quarter_start
 
 
-def test_yesterday():
+@pytest.mark.parametrize('text, dt_from, dt_to', [
+    ('yesterday', datetime(2018, 10, 9, 0, 0, 0), datetime(2018, 10, 10, 0, 0, 0)),
+    ('today', datetime(2018, 10, 10, 0, 0, 0), datetime(2018, 10, 11, 0, 0, 0)),
+    ('tomorrow', datetime(2018, 10, 11, 0, 0, 0), datetime(2018, 10, 12, 0, 0, 0)),
+])
+def test_predefined(text, dt_from, dt_to):
     base_date = datetime(2018, 10, 10, 9, 30, 00)
-    data = DateParser().parse_period('yesterday', base_date)
-    assert data['from'] == datetime(2018, 10, 9, 0, 0, 0)
-    assert data['to'] == datetime(2018, 10, 10, 0, 0, 0)
-
-
-def test_related_period():
-    data = DateParser().parse_period('yesterday')
-    assert data['period'] == 'day'
-    assert data['quantity'] == 1
-    assert data['direction'] == 'past'
+    _from, _to = DateParser().parse_period(text, base_date)
+    assert _from == dt_from
+    assert _to == dt_to
 
 
 def test_unknown():
