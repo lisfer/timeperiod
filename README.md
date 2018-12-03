@@ -6,13 +6,15 @@ A simple parser of time periods specified in a text to datetime objects.
 pip install git+https://github.com/lisfer/timeperiod.git
 ```
 
-Lib parser phrases like "**&lt;time_direction&gt** [**&lt;number&gt;**] **&lt;time_period&gt**" where
+Lib parser phrases like "**&lt;time_direction&gt** [**&lt;number&gt;**] **&lt;time_period&gt;**" where
 
-**&lt;time_direction&gt** - one of the next values: *last / past / previous / current / this / next*
+**&lt;time_direction&gt;** - one of the next values: *last / past / previous / current / this / next*
 
 **&lt;number&gt;** - number of "periods". Can be absent
 
 **&lt;time_period&gt;** - one of the next values *day(s) / week(s) / month(es) / quarter(s) / year(s)*
+
+Also, underestands "**yesterday / today / tomorrow**"
 
 ## Usage
 
