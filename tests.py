@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from main import DateParser, quarter_start
+from timepeiod import DateParser, quarter_start
 
 
 @pytest.mark.parametrize('text, dt_from, dt_to', [
@@ -29,11 +29,22 @@ def test_predefined(text, dt_from, dt_to):
     assert _to == dt_to
 
 
-def test_unknown():
-    assert (None, None) == DateParser().parse_period('unknown words')
-    assert (None, None) == DateParser().parse_period('next song')
-    assert (None, None) == DateParser().parse_period('7 cars')
-    assert (None, None) == DateParser().parse_period('every week')
+@pytest.mark.parametrize('text', [
+    'unknown words', 'next song', '7 cars', 'every week'
+])
+def test_unknown(text):
+    assert (None, None) == DateParser().parse_period(text)
+
+
+@pytest.mark.parametrize('text, _from, _to', [
+    ('the year', datetime(2018, 1, 1, 0, 0, 0), datetime(2019, 1, 1, 0, 0, 0)),
+    ('the next year', datetime(2019, 1, 1, 0, 0, 0), datetime(2020, 1, 1, 0, 0, 0)),
+    ('the last year', datetime(2017, 1, 1, 0, 0, 0), datetime(2018, 1, 1, 0, 0, 0)),
+    ('the longest year', None, None),
+])
+def test_the_period(text, _from, _to):
+    base_date = datetime(2018, 10, 10, 9, 30, 00)
+    assert DateParser().parse_period(text, base_date) == (_from, _to)
 
 
 def test_last_week():

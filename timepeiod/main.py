@@ -69,10 +69,14 @@ class DateParser:
         for start, end in z.regs[-1:0:-1]:
             if text and (start, end) != (-1, -1):
                 text = f'{text[:start].strip()} {text[end:].strip()}'
-        return z.group(), text.strip()
+        return z.group().strip(), text.strip()
 
     @classmethod
     def get_parsed_direction(cls, text):
+        period, _ = cls.get_parsed_token('the\W+' + PERIOD_PATTERN, text)
+        if period.startswith('the '):
+            return 'current', text
+
         return cls.get_parsed_token(DIRECTION_PATTERN, text)
 
     @classmethod
