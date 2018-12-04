@@ -8,29 +8,39 @@ PREDEFINED_PERIODS = {
     'tomorrow': dict(direction='next', step='day', quantity=1)
 }
 
-TIME_DIRECTIONS = {
-    'current': 'current',
-    'this': 'current',
-    'next': 'future',
-    'last': 'past',
-    'past': 'past',
-    'previous': 'past',
+_time_directions = {
+    'current': ['current', 'this'],
+    'future': ['next'],
+    'past': ['last', 'past', 'previous'],
 }
 
-TIME_PERIODS = {
-    'day': 's',
-    'week': 's',
-    'quarter': 's',
-    'month': 'es',
-    'year': 's'
+_time_periods = {
+    'day': ['day', 'days'],
+    'week': ['week', 'weeks'],
+    'month': ['month', 'monthes'],
+    'quarter': ['quarter', 'quarters'],
+    'year': ['year', 'years']
 }
+
+def unfold_dicts(data):
+    """
+    transform the dict of lists to a dict:
+    {a: [1, 11, 111], b: [2, 22]}
+        >>
+    {1: a, 11: a, 111: a, 2: b, 22: b}
+    :param data:
+    :return:
+    """
+    return {v: key for key, values in data.items() for v in values}
+
+
+TIME_DIRECTIONS = unfold_dicts(_time_directions)
+TIME_PERIODS = unfold_dicts(_time_periods)
 
 DIRECTION_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_DIRECTIONS))
-QUANTITY_PATTERN = rf"(?P<quantity>\d+)"
+PERIOD_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_PERIODS))
+QUANTITY_PATTERN = rf"(\d+)"
 
-#\b(?P<period>day(?=({s})?\b)|...|year(?=(s)?\b)))
-PERIOD_PATTERN =  r"\b(?P<period>{})".format(
-    '|'.join([rf'{k}(?=({v})?\b)' for k, v in TIME_PERIODS.items()]))
 
 
 class DateParser:
@@ -62,22 +72,21 @@ class DateParser:
         return dt_from, dt_to
 
     @classmethod
-    def get_parsed_token(cls, pattern, text):
+    def get_parsed_single_token(cls, pattern, text):
         z = re.search(pattern, text)
         if not z:
             return '', text
-        for start, end in z.regs[-1:0:-1]:
-            if text and (start, end) != (-1, -1):
-                text = f'{text[:start].strip()} {text[end:].strip()}'
+
+        text = f'{text[:z.start()].strip()} {text[z.end():].strip()}'
         return z.group().strip(), text.strip()
 
     @classmethod
     def get_parsed_direction(cls, text):
-        period, _ = cls.get_parsed_token('the\W+' + PERIOD_PATTERN, text)
+        period, _ = cls.get_parsed_single_token('the\W+' + PERIOD_PATTERN, text)
         if period.startswith('the '):
             return 'current', text
 
-        return cls.get_parsed_token(DIRECTION_PATTERN, text)
+        return cls.get_parsed_single_token(DIRECTION_PATTERN, text)
 
     @classmethod
     def get_parsed_quantity(cls, text):
@@ -85,7 +94,7 @@ class DateParser:
 
     @classmethod
     def get_parsed_step(cls, text):
-        return cls.get_parsed_token(PERIOD_PATTERN, text)
+        return cls.get_parsed_single_token(PERIOD_PATTERN, text)
 
     @classmethod
     def get_parsed_raw_data(cls, text):
@@ -106,7 +115,7 @@ class DateParser:
         """
         return (TIME_DIRECTIONS[data.get('direction') or 'past'],
                 int(data.get('quantity') or 1),
-                data.get('step') or 'day')
+                TIME_PERIODS[data.get('step') or 'day'])
 
     @classmethod
     def get_base_date(cls, basedate, step):

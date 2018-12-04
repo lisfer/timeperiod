@@ -62,11 +62,11 @@ def test_last_two_week():
 
 
 @pytest.mark.parametrize('text, parsed, unused', [
-    ('last 2 weeks', ('last', '2', 'week'), ''),
+    ('last 2 weeks', ('last', '2', 'weeks'), ''),
     ('next month', ('next', '', 'month'), ''),
-    ('previous 2 quarters', ('previous', '2', 'quarter'), ''),
-    ('last 5 long years', ('last', '5', 'year'), 'long'),
-    ('past years', ('past', '', 'year'), ''),
+    ('previous 2 quarters', ('previous', '2', 'quarters'), ''),
+    ('last 5 long years', ('last', '5', 'years'), 'long'),
+    ('past year', ('past', '', 'year'), ''),
     ('', ('', '', ''), ''),
 ])
 def test_get_parsed_data(text, parsed, unused):
@@ -103,11 +103,11 @@ def test_quantity_pattern(text, quantity, subtext):
 @pytest.mark.parametrize('text, period, subtext', [
     ('last 2 dayz', '', 'last 2 dayz'),
     ('last 2 dday', '', 'last 2 dday'),
-    ('last 2 weeks', 'week', 'last 2'),
+    ('last 2 weeks', 'weeks', 'last 2'),
     ('last 2 weeksss', '', 'last 2 weeksss'),
     ('the next month', 'month', 'the next'),
-    ('the next 3 monthes', 'month', 'the next 3'),
-    ('2 weeks ago', 'week', '2 ago'),
+    ('the next 3 monthes', 'monthes', 'the next 3'),
+    ('2 weeks ago', 'weeks', '2 ago'),
     ('yesterday', '', 'yesterday'),
     ('week', 'week', ''),
     ('', '', ''),
