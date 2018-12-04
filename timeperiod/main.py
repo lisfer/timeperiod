@@ -2,6 +2,43 @@ import re
 from datetime import datetime, timedelta
 
 
+NUMBERS = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    'four': 4,
+    'five': 5,
+    'six': 6,
+    'seven': 7,
+    'eight': 8,
+    'nine': 9,
+    'ten': 10,
+    'eleven': 11,
+    'twelve': 12,
+    'thirteen': 13,
+    'fourteen': 14,
+    'fifteen': 15,
+    'sixteen': 16,
+    'seventeen': 17,
+    'eighteen': 18,
+    'nineteen': 19,
+    'twenty': 20,
+    'thirty': 30,
+    'forty': 40,
+    'fifty': 50,
+    'sixty': 60,
+    'seventy': 70,
+    'eighty': 80,
+    'ninety': 90,
+    'hundred': 100,
+    'hundreds': 100,
+    'thousand': 1000,
+    'thousands': 1000,
+    'million': 1000000,
+    'millions': 1000000
+}
+
+
 PREDEFINED_PERIODS = {
     'yesterday': dict(direction='past', step='day', quantity=1),
     'today': dict(direction='current', step='day', quantity=0),
@@ -39,11 +76,12 @@ TIME_PERIODS = unfold_dicts(_time_periods)
 
 DIRECTION_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_DIRECTIONS))
 PERIOD_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_PERIODS))
-QUANTITY_PATTERN = rf"(\d+)"
-
+QUANTITY_PATTERN = r"(\d+)"
+QUANTITY_WORDS_PATTERN = r'((\b{}\b)(\W|and|the|[a\.,])*)+'.format(r'\b|\b'.join(NUMBERS))
 
 
 class DateParser:
+
     @classmethod
     def parse_period(cls, text, base_date=None):
 
@@ -72,7 +110,7 @@ class DateParser:
         return dt_from, dt_to
 
     @classmethod
-    def get_parsed_single_token(cls, pattern, text):
+    def get_parsed_token(cls, pattern, text):
         z = re.search(pattern, text)
         if not z:
             return '', text
@@ -82,19 +120,23 @@ class DateParser:
 
     @classmethod
     def get_parsed_direction(cls, text):
-        period, _ = cls.get_parsed_single_token('the\W+' + PERIOD_PATTERN, text)
+        period, _ = cls.get_parsed_token('the\W+' + PERIOD_PATTERN, text)
         if period.startswith('the '):
             return 'current', text
 
-        return cls.get_parsed_single_token(DIRECTION_PATTERN, text)
+        return cls.get_parsed_token(DIRECTION_PATTERN, text)
 
     @classmethod
     def get_parsed_quantity(cls, text):
+        parsed, unused = cls.get_parsed_token(QUANTITY_WORDS_PATTERN, text)
+        if parsed:
+            return parsed, unused
+
         return cls.get_parsed_token(QUANTITY_PATTERN, text)
 
     @classmethod
     def get_parsed_step(cls, text):
-        return cls.get_parsed_single_token(PERIOD_PATTERN, text)
+        return cls.get_parsed_token(PERIOD_PATTERN, text)
 
     @classmethod
     def get_parsed_raw_data(cls, text):

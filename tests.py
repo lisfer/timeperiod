@@ -15,6 +15,7 @@ from datetime import datetime
 import pytest
 
 from timeperiod import DateParser, quarter_start
+from timeperiod.main import QUANTITY_WORDS_PATTERN
 
 
 @pytest.mark.parametrize('text, dt_from, dt_to', [
@@ -180,3 +181,17 @@ def test_increase_date(dt, step, quantity, result):
 ])
 def test_decrease_date(dt, step, quantity, result):
     assert DateParser.decrease_date(dt, step, quantity) == result
+
+
+@pytest.mark.parametrize('text, result', [
+    ('one', ('one', '')),
+    ('  two  ', ('two', '')),
+    (' forty  two', ('forty  two', '')),
+    ('two thousands and three hundreds twenty four',
+     ('two thousands and three hundreds twenty four', '')),
+    ('two thousands and three fail hundreds twenty four',
+     ('two thousands and three', 'fail hundreds twenty four')),
+])
+def test_parse_word_numbers(text, result):
+    print(text, result)
+    assert DateParser.get_parsed_token(QUANTITY_WORDS_PATTERN, text) == result
