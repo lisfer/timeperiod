@@ -15,7 +15,7 @@ from datetime import datetime
 import pytest
 
 from timeperiod import DateParser, quarter_start
-from timeperiod.main import QUANTITY_WORDS_PATTERN
+from timeperiod.main import QUANTITY_PATTERN
 
 
 @pytest.mark.parametrize('text, dt_from, dt_to', [
@@ -95,7 +95,7 @@ def test_direction_pattern(text, direction, subtext):
     ('2 weeks', '2', 'weeks'),
     ('22', '22', ''),
     ('', '', ''),
-    ('last 123.4 weeks', '123', 'last .4 weeks'),
+    ('last 123.4 weeks', '123.4', 'last weeks'),
 ])
 def test_quantity_pattern(text, quantity, subtext):
     assert (quantity, subtext) == DateParser().get_parsed_quantity(text)
@@ -194,4 +194,19 @@ def test_decrease_date(dt, step, quantity, result):
 ])
 def test_parse_word_numbers(text, result):
     print(text, result)
-    assert DateParser.get_parsed_token(QUANTITY_WORDS_PATTERN, text) == result
+    assert DateParser.get_parsed_token(QUANTITY_PATTERN, text) == result
+
+
+
+
+@pytest.mark.parametrize('text, result', [
+    ('one', 1),
+    ('one and three', 4),
+    ('  two  ', 2),
+    (' forty two', 42),
+    ('two thousands and three hundreds twenty four', 2324),
+    ('two thousands and thousands', 3000),
+    ('two thousands and 247', 2247),
+])
+def test_parse_numbers(text, result):
+    assert DateParser.parse_numeric_words(text) == result

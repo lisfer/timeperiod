@@ -76,8 +76,7 @@ TIME_PERIODS = unfold_dicts(_time_periods)
 
 DIRECTION_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_DIRECTIONS))
 PERIOD_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_PERIODS))
-QUANTITY_PATTERN = r"(\d+)"
-QUANTITY_WORDS_PATTERN = r'((\b{}\b)(\W|and|the|[a\.,])*)+'.format(r'\b|\b'.join(NUMBERS))
+QUANTITY_PATTERN = r'((\d+|\b{}\b)(\W|and|the|[a\.,])*)+'.format(r'\b|\b'.join(NUMBERS))
 
 
 class DateParser:
@@ -128,10 +127,6 @@ class DateParser:
 
     @classmethod
     def get_parsed_quantity(cls, text):
-        parsed, unused = cls.get_parsed_token(QUANTITY_WORDS_PATTERN, text)
-        if parsed:
-            return parsed, unused
-
         return cls.get_parsed_token(QUANTITY_PATTERN, text)
 
     @classmethod
@@ -144,6 +139,23 @@ class DateParser:
         quantity, text = cls.get_parsed_quantity(text)
         step, text = cls.get_parsed_step(text)
         return dict(direction=direction, quantity=quantity, step=step), text
+
+    @classmethod
+    def parse_numeric_words(cls, text):
+        grades = {}
+        result = 0
+        for w in text.split():
+            if not w:
+                continue
+            if re.fullmatch('\d+', w):
+                result += int(w)
+            number = NUMBERS.get(w, 0)
+            if number in [100, 1000, 1000000] and result:
+                grades[number] = grades.get(number, 0) + result * number
+                result = 0
+            else:
+                result += number
+        return result + sum(grades.values())
 
     @classmethod
     def normalize_parsed_data(cls, data):
