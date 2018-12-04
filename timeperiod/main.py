@@ -40,9 +40,9 @@ NUMBERS = {
 
 
 PREDEFINED_PERIODS = {
-    'yesterday': dict(direction='past', step='day', quantity=1),
-    'today': dict(direction='current', step='day', quantity=0),
-    'tomorrow': dict(direction='next', step='day', quantity=1)
+    'yesterday': dict(direction='past', step='day', quantity='1'),
+    'today': dict(direction='current', step='day', quantity='0'),
+    'tomorrow': dict(direction='next', step='day', quantity='1')
 }
 
 _time_directions = {
@@ -168,7 +168,7 @@ class DateParser:
         :return:
         """
         return (TIME_DIRECTIONS[data.get('direction') or 'past'],
-                int(data.get('quantity') or 1),
+                cls.parse_numeric_words(data.get('quantity')) or 1,
                 TIME_PERIODS[data.get('step') or 'day'])
 
     @classmethod

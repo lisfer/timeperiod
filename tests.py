@@ -41,6 +41,8 @@ def test_unknown(text):
     ('the year', datetime(2018, 1, 1, 0, 0, 0), datetime(2019, 1, 1, 0, 0, 0)),
     ('the next year', datetime(2019, 1, 1, 0, 0, 0), datetime(2020, 1, 1, 0, 0, 0)),
     ('the last year', datetime(2017, 1, 1, 0, 0, 0), datetime(2018, 1, 1, 0, 0, 0)),
+    ('last forty three days', datetime(2018, 8, 28, 0, 0, 0), datetime(2018, 10, 10, 0, 0, 0)),
+    ('next eleven weeks', datetime(2018, 10, 15, 0, 0),  datetime(2018, 12, 31, 0, 0)),
     ('the longest year', None, None),
 ])
 def test_the_period(text, _from, _to):
