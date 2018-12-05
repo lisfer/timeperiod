@@ -15,6 +15,7 @@ from datetime import datetime
 import pytest
 
 from timeperiod import DateParser, quarter_start
+from timeperiod.main import QUANTITY_PATTERN
 
 
 @pytest.mark.parametrize('text, dt_from, dt_to', [
@@ -40,6 +41,8 @@ def test_unknown(text):
     ('the year', datetime(2018, 1, 1, 0, 0, 0), datetime(2019, 1, 1, 0, 0, 0)),
     ('the next year', datetime(2019, 1, 1, 0, 0, 0), datetime(2020, 1, 1, 0, 0, 0)),
     ('the last year', datetime(2017, 1, 1, 0, 0, 0), datetime(2018, 1, 1, 0, 0, 0)),
+    ('last forty three days', datetime(2018, 8, 28, 0, 0, 0), datetime(2018, 10, 10, 0, 0, 0)),
+    ('next eleven weeks', datetime(2018, 10, 15, 0, 0),  datetime(2018, 12, 31, 0, 0)),
     ('the longest year', None, None),
 ])
 def test_the_period(text, _from, _to):
@@ -62,11 +65,11 @@ def test_last_two_week():
 
 
 @pytest.mark.parametrize('text, parsed, unused', [
-    ('last 2 weeks', ('last', '2', 'week'), ''),
+    ('last 2 weeks', ('last', '2', 'weeks'), ''),
     ('next month', ('next', '', 'month'), ''),
-    ('previous 2 quarters', ('previous', '2', 'quarter'), ''),
-    ('last 5 long years', ('last', '5', 'year'), 'long'),
-    ('past years', ('past', '', 'year'), ''),
+    ('previous 2 quarters', ('previous', '2', 'quarters'), ''),
+    ('last 5 long years', ('last', '5', 'years'), 'long'),
+    ('past year', ('past', '', 'year'), ''),
     ('', ('', '', ''), ''),
 ])
 def test_get_parsed_data(text, parsed, unused):
@@ -94,7 +97,7 @@ def test_direction_pattern(text, direction, subtext):
     ('2 weeks', '2', 'weeks'),
     ('22', '22', ''),
     ('', '', ''),
-    ('last 123.4 weeks', '123', 'last .4 weeks'),
+    ('last 123.4 weeks', '123.4', 'last weeks'),
 ])
 def test_quantity_pattern(text, quantity, subtext):
     assert (quantity, subtext) == DateParser().get_parsed_quantity(text)
@@ -103,11 +106,11 @@ def test_quantity_pattern(text, quantity, subtext):
 @pytest.mark.parametrize('text, period, subtext', [
     ('last 2 dayz', '', 'last 2 dayz'),
     ('last 2 dday', '', 'last 2 dday'),
-    ('last 2 weeks', 'week', 'last 2'),
+    ('last 2 weeks', 'weeks', 'last 2'),
     ('last 2 weeksss', '', 'last 2 weeksss'),
     ('the next month', 'month', 'the next'),
-    ('the next 3 monthes', 'month', 'the next 3'),
-    ('2 weeks ago', 'week', '2 ago'),
+    ('the next 3 monthes', 'monthes', 'the next 3'),
+    ('2 weeks ago', 'weeks', '2 ago'),
     ('yesterday', '', 'yesterday'),
     ('week', 'week', ''),
     ('', '', ''),
@@ -180,3 +183,32 @@ def test_increase_date(dt, step, quantity, result):
 ])
 def test_decrease_date(dt, step, quantity, result):
     assert DateParser.decrease_date(dt, step, quantity) == result
+
+
+@pytest.mark.parametrize('text, result', [
+    ('one', ('one', '')),
+    ('  two  ', ('two', '')),
+    (' forty  two', ('forty  two', '')),
+    ('two thousands and three hundreds twenty four',
+     ('two thousands and three hundreds twenty four', '')),
+    ('two thousands and three fail hundreds twenty four',
+     ('two thousands and three', 'fail hundreds twenty four')),
+])
+def test_parse_word_numbers(text, result):
+    print(text, result)
+    assert DateParser.get_parsed_token(QUANTITY_PATTERN, text) == result
+
+
+
+
+@pytest.mark.parametrize('text, result', [
+    ('one', 1),
+    ('one and three', 4),
+    ('  two  ', 2),
+    (' forty two', 42),
+    ('two thousands and three hundreds twenty four', 2324),
+    ('two thousands and thousands', 3000),
+    ('two thousands and 247', 2247),
+])
+def test_parse_numbers(text, result):
+    assert DateParser.parse_numeric_words(text) == result

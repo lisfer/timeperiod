@@ -2,38 +2,85 @@ import re
 from datetime import datetime, timedelta
 
 
+NUMBERS = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    'four': 4,
+    'five': 5,
+    'six': 6,
+    'seven': 7,
+    'eight': 8,
+    'nine': 9,
+    'ten': 10,
+    'eleven': 11,
+    'twelve': 12,
+    'thirteen': 13,
+    'fourteen': 14,
+    'fifteen': 15,
+    'sixteen': 16,
+    'seventeen': 17,
+    'eighteen': 18,
+    'nineteen': 19,
+    'twenty': 20,
+    'thirty': 30,
+    'forty': 40,
+    'fifty': 50,
+    'sixty': 60,
+    'seventy': 70,
+    'eighty': 80,
+    'ninety': 90,
+    'hundred': 100,
+    'hundreds': 100,
+    'thousand': 1000,
+    'thousands': 1000,
+    'million': 1000000,
+    'millions': 1000000
+}
+
+
 PREDEFINED_PERIODS = {
-    'yesterday': dict(direction='past', step='day', quantity=1),
-    'today': dict(direction='current', step='day', quantity=0),
-    'tomorrow': dict(direction='next', step='day', quantity=1)
+    'yesterday': dict(direction='past', step='day', quantity='1'),
+    'today': dict(direction='current', step='day', quantity='0'),
+    'tomorrow': dict(direction='next', step='day', quantity='1')
 }
 
-TIME_DIRECTIONS = {
-    'current': 'current',
-    'this': 'current',
-    'next': 'future',
-    'last': 'past',
-    'past': 'past',
-    'previous': 'past',
+_time_directions = {
+    'current': ['current', 'this'],
+    'future': ['next'],
+    'past': ['last', 'past', 'previous'],
 }
 
-TIME_PERIODS = {
-    'day': 's',
-    'week': 's',
-    'quarter': 's',
-    'month': 'es',
-    'year': 's'
+_time_periods = {
+    'day': ['day', 'days'],
+    'week': ['week', 'weeks'],
+    'month': ['month', 'monthes'],
+    'quarter': ['quarter', 'quarters'],
+    'year': ['year', 'years']
 }
+
+def unfold_dicts(data):
+    """
+    transform the dict of lists to a dict:
+    {a: [1, 11, 111], b: [2, 22]}
+        >>
+    {1: a, 11: a, 111: a, 2: b, 22: b}
+    :param data:
+    :return:
+    """
+    return {v: key for key, values in data.items() for v in values}
+
+
+TIME_DIRECTIONS = unfold_dicts(_time_directions)
+TIME_PERIODS = unfold_dicts(_time_periods)
 
 DIRECTION_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_DIRECTIONS))
-QUANTITY_PATTERN = rf"(?P<quantity>\d+)"
-
-#\b(?P<period>day(?=({s})?\b)|...|year(?=(s)?\b)))
-PERIOD_PATTERN =  r"\b(?P<period>{})".format(
-    '|'.join([rf'{k}(?=({v})?\b)' for k, v in TIME_PERIODS.items()]))
+PERIOD_PATTERN = r"(\b{}\b)".format(r'\b|\b'.join(TIME_PERIODS))
+QUANTITY_PATTERN = r'((\d+|\b{}\b)(\W|and|the|[a\.,])*)+'.format(r'\b|\b'.join(NUMBERS))
 
 
 class DateParser:
+
     @classmethod
     def parse_period(cls, text, base_date=None):
 
@@ -66,9 +113,8 @@ class DateParser:
         z = re.search(pattern, text)
         if not z:
             return '', text
-        for start, end in z.regs[-1:0:-1]:
-            if text and (start, end) != (-1, -1):
-                text = f'{text[:start].strip()} {text[end:].strip()}'
+
+        text = f'{text[:z.start()].strip()} {text[z.end():].strip()}'
         return z.group().strip(), text.strip()
 
     @classmethod
@@ -95,6 +141,23 @@ class DateParser:
         return dict(direction=direction, quantity=quantity, step=step), text
 
     @classmethod
+    def parse_numeric_words(cls, text):
+        grades = {}
+        result = 0
+        for w in text.split():
+            if not w:
+                continue
+            if re.fullmatch('\d+', w):
+                result += int(w)
+            number = NUMBERS.get(w, 0)
+            if number in [100, 1000, 1000000] and result:
+                grades[number] = grades.get(number, 0) + result * number
+                result = 0
+            else:
+                result += number
+        return result + sum(grades.values())
+
+    @classmethod
     def normalize_parsed_data(cls, data):
         """
         Reduces time_direction to current / future / past value
@@ -105,8 +168,8 @@ class DateParser:
         :return:
         """
         return (TIME_DIRECTIONS[data.get('direction') or 'past'],
-                int(data.get('quantity') or 1),
-                data.get('step') or 'day')
+                cls.parse_numeric_words(data.get('quantity')) or 1,
+                TIME_PERIODS[data.get('step') or 'day'])
 
     @classmethod
     def get_base_date(cls, basedate, step):
