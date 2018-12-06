@@ -5,7 +5,7 @@ today
 yesterday
 tomorrow
 last week / month / quarter / year
-last X weeks / monthes / quarters / years
+last X weeks / months / quarters / years
 
 next X ...
 
@@ -109,7 +109,7 @@ def test_quantity_pattern(text, quantity, subtext):
     ('last 2 weeks', 'weeks', 'last 2'),
     ('last 2 weeksss', '', 'last 2 weeksss'),
     ('the next month', 'month', 'the next'),
-    ('the next 3 monthes', 'monthes', 'the next 3'),
+    ('the next 3 months', 'months', 'the next 3'),
     ('2 weeks ago', 'weeks', '2 ago'),
     ('yesterday', '', 'yesterday'),
     ('week', 'week', ''),
