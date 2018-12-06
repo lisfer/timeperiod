@@ -54,7 +54,7 @@ _time_directions = {
 _time_periods = {
     'day': ['day', 'days'],
     'week': ['week', 'weeks'],
-    'month': ['month', 'monthes'],
+    'month': ['month', 'months'],
     'quarter': ['quarter', 'quarters'],
     'year': ['year', 'years']
 }
