@@ -48,7 +48,7 @@ PREDEFINED_PERIODS = {
 _time_directions = {
     'current': ['current', 'this'],
     'future': ['next'],
-    'past': ['last', 'past', 'previous'],
+    'past': ['last', 'past', 'previous', 'ago'],
 }
 
 _time_periods = {
